@@ -1,8 +1,8 @@
 // OBI to AXI4-Lite Adapter
 // Converts Ibex OBI-like memory interface to AXI4-Lite master
 module obi_axil_adapter #(
-    parameter int unsigned ADDR_WIDTH = 32,
-    parameter int unsigned DATA_WIDTH = 32
+    parameter ADDR_WIDTH = 32,
+    parameter DATA_WIDTH = 32
 )(
     input  logic                      clk,
     input  logic                      rst_n,
@@ -43,16 +43,14 @@ module obi_axil_adapter #(
 );
 
     // FSM states
-    typedef enum logic [2:0] {
-        ST_IDLE,
-        ST_WR_ADDR,  // AW pending (W already accepted)
-        ST_WR_DATA,  // W pending (AW already accepted)
-        ST_WR_RESP,  // waiting for B
-        ST_RD_ADDR,  // AR pending
-        ST_RD_RESP   // waiting for R
-    } state_e;
+    localparam [2:0] ST_IDLE    = 3'd0,
+                     ST_WR_ADDR = 3'd1,
+                     ST_WR_DATA = 3'd2,
+                     ST_WR_RESP = 3'd3,
+                     ST_RD_ADDR = 3'd4,
+                     ST_RD_RESP = 3'd5;
 
-    state_e state_q, state_d;
+    reg [2:0] state_q, state_d;
 
     // Track which AXI channels have been accepted in write path
     logic aw_done_q, aw_done_d;
@@ -62,7 +60,6 @@ module obi_axil_adapter #(
     logic [ADDR_WIDTH-1:0] addr_q;
     logic [DATA_WIDTH-1:0] wdata_q;
     logic [DATA_WIDTH/8-1:0] be_q;
-    logic                  we_q;
 
     // ---------------------------------------------------------------
     // Request latch — capture OBI signals when grant is asserted
@@ -72,12 +69,10 @@ module obi_axil_adapter #(
             addr_q  <= '0;
             wdata_q <= '0;
             be_q    <= '0;
-            we_q    <= 1'b0;
         end else if (obi_req_i && obi_gnt_o) begin
             addr_q  <= obi_addr_i;
             wdata_q <= obi_wdata_i;
             be_q    <= obi_be_i;
-            we_q    <= obi_we_i;
         end
     end
 

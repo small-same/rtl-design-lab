@@ -9,6 +9,6 @@ sim:
 
 lint:
 	bash $(PROJECT_ROOT)/scripts/lint/run_lint.sh \
-		$(IP_DIR)/filelist/rtl.f $(IP_DIR)
+		$(IP_DIR)/filelist/rtl.f $(IP_DIR) axi_dma_regs
 
 .PHONY: sim lint
