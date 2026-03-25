@@ -1,0 +1,31 @@
+# EDA tool reports (generated output)
+**/reports/
+
+# Common EDA tool outputs
+*.log
+*.vcd
+
+# Icarus Verilog
+*.vvp
+**/sim_out/
+
+# Verilator
+obj_dir/
+
+# Yosys
+*.blif
+*.edif
+*.json.synth
+
+# GTKWave
+*.gtkw
+
+# Compilation artifacts
+a.out
+
+# Local Claude Code settings (user-specific)
+.claude/settings.local.json
+
+# OS files
+.DS_Store
+Thumbs.db

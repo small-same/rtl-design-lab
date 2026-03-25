@@ -1,0 +1,6 @@
+services:
+  eda:
+    build: .
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
