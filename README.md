@@ -8,15 +8,8 @@ The design target is a simple RISC-V SoC subsystem built around the **Ibex core*
 
 The flow covers the typical front-end stages:
 
-```mermaid
-graph LR
-    A[RTL Design] --> B[Code Review] --> C[Lint] --> D[Simulation] --> E[Logic Synthesis]
-
-    style A fill:#4a90d9,color:#fff
-    style B fill:#5ba55b,color:#fff
-    style C fill:#e8a838,color:#fff
-    style D fill:#e8a838,color:#fff
-    style E fill:#c0392b,color:#fff
+```
+RTL Design  →  Code Review  →  Lint  →  Simulation  →  Logic Synthesis
 ```
 
 All EDA tools (Verilator, Yosys, Icarus Verilog, RISC-V GCC) run inside Docker containers — nothing needs to be installed on the host besides Docker.
@@ -25,29 +18,22 @@ A **Claude Code multi-agent pipeline** automates the flow: specialized agents ha
 
 ## 2. SoC Architecture
 
-```mermaid
-graph TD
-    CPU["Ibex CPU<br/>(RV32IMC)"]
-    CPU -->|instr port| MUX
-    CPU -->|data port| MUX
-    MUX["obi_mux<br/><i>2-to-1 fixed-priority arbiter</i>"]
-    MUX --> BRIDGE
-    BRIDGE["obi_axil_adapter<br/><i>OBI → AXI4-Lite bridge</i>"]
-    BRIDGE --> XBAR
-    XBAR["axi_interconnect<br/><i>1-to-4 address decoder</i>"]
-    XBAR --> SRAM["axi_sram<br/>4 KB"]
-    XBAR --> DMA["axi_dma<br/>core + regs"]
-    XBAR --> UART["axi_uart_lite<br/>TX / RX"]
-    XBAR --> TIMER["axi_timer<br/>32-bit + IRQ"]
-
-    style CPU fill:#4a90d9,color:#fff
-    style MUX fill:#5ba55b,color:#fff
-    style BRIDGE fill:#5ba55b,color:#fff
-    style XBAR fill:#e8a838,color:#fff
-    style SRAM fill:#888,color:#fff
-    style DMA fill:#888,color:#fff
-    style UART fill:#888,color:#fff
-    style TIMER fill:#888,color:#fff
+```
+Ibex CPU (ibex_core + ibex_register_file_ff)
+    │ instr port          │ data port
+    └────────┐   ┌────────┘
+             ▼   ▼
+          obi_mux               ← 2-to-1 fixed-priority arbiter
+              │
+              ▼
+       obi_axil_adapter         ← OBI → AXI4-Lite protocol bridge
+              │
+              ▼
+       axi_interconnect         ← 1-to-4 address decoder
+         │         │          │         │
+         ▼         ▼          ▼         ▼
+     axi_sram  axi_dma_regs  axi_uart  axi_timer
+      (4 KB)    + dma_core    _lite      (32-bit)
 ```
 
 ### Address Map
@@ -198,20 +184,10 @@ Seven Claude Code agents collaborate in a sequential pipeline. Within each step,
 
 ### Pipeline Flow
 
-```mermaid
-graph LR
-    S[Spec] --> R[RTL Design] --> CR[Code Review] --> L[Lint] --> SIM[Simulation] --> SYN[Synthesis]
-    SIM -->|errors| DBG[Sim Debug]
-    DBG -->|root cause| R
-    L -->|errors| R
-
-    style S fill:#888,color:#fff
-    style R fill:#4a90d9,color:#fff
-    style CR fill:#5ba55b,color:#fff
-    style L fill:#e8a838,color:#fff
-    style SIM fill:#e8a838,color:#fff
-    style SYN fill:#c0392b,color:#fff
-    style DBG fill:#8e44ad,color:#fff
+```
+Spec  →  RTL Design  →  Code Review  →  Lint  →  Sim  →  Synthesis
+               ↑                                    │
+               └──── fix & re-verify (if errors) ───┘
 ```
 
 ### Shortcut Commands
